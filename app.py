@@ -3,7 +3,7 @@ import requests
 
 st.set_page_config(page_title="Kripto Arbitraj Botu", page_icon="⚡", layout="wide")
 
-st.title("⚡ Kripto Üçgen Arbitraj Takibi")
+st.title("⚡ Kripto Üçgen Arbitraj Takibi (Canlı Binance US)")
 
 # --- TELEGRAM AYARLARI ---
 st.sidebar.header("📱 Telegram Bildirim Ayarları")
@@ -20,29 +20,22 @@ def send_telegram_message(token, chat_id, message):
         except Exception as e:
             st.error(f"Telegram mesajı gönderilemedi: {e}")
 
-# Binance Engelini Aşan Fiyat Çekme Fonksiyonu
-def get_price(symbol):
-    endpoints = [
-        "https://api3.binance.com/api/v3/ticker/price",
-        "https://api1.binance.com/api/v3/ticker/price",
-        "https://api.binance.com/api/v3/ticker/price"
-    ]
-    for url in endpoints:
-        try:
-            res = requests.get(url, params={"symbol": symbol}, timeout=5)
-            if res.status_code == 200:
-                return float(res.json()['price'])
-        except:
-            continue
-    raise Exception(f"{symbol} fiyatı çekilemedi. Binance IP engeli devam ediyor.")
+# Binance US üzerinden anlık canlı fiyat çekici (IP Engeli Olmayan Endpoint)
+def get_binance_us_price(symbol):
+    url = f"https://api.binance.us/api/v3/ticker/price?symbol={symbol}"
+    res = requests.get(url, timeout=5)
+    if res.status_code == 200:
+        return float(res.json()['price'])
+    else:
+        raise Exception(f"{symbol} fiyatı alınamadı! Durum Kodu: {res.status_code}")
 
 try:
-    # Fiyat çekme işlemleri
-    p1 = get_price("BTCUSDT")
-    p2 = get_price("ETHBTC")
-    p3 = get_price("ETHUSDT")
+    # Binance US üzerinden canlı fiyat çekme
+    p1 = get_binance_us_price("BTCUSDT")
+    p2 = get_binance_us_price("ETHBTC")
+    p3 = get_binance_us_price("ETHUSDT")
 
-    # Üçgen arbitraj hesabı
+    # Üçgen arbitraj hesabı (1 USDT -> BTC -> ETH -> USDT)
     final_usdt = (1 / p1) * (1 / p2) * p3
     profit = (final_usdt - 1) * 100
 
