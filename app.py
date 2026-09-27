@@ -1,6 +1,5 @@
 import streamlit as st
 import requests
-from binance.spot import Spot as Client
 
 st.set_page_config(page_title="Kripto Arbitraj Botu", page_icon="⚡", layout="wide")
 
@@ -21,14 +20,27 @@ def send_telegram_message(token, chat_id, message):
         except Exception as e:
             st.error(f"Telegram mesajı gönderilemedi: {e}")
 
-# Binance Client
-client = Client()
+# Binance Engelini Aşan Fiyat Çekme Fonksiyonu
+def get_price(symbol):
+    endpoints = [
+        "https://api3.binance.com/api/v3/ticker/price",
+        "https://api1.binance.com/api/v3/ticker/price",
+        "https://api.binance.com/api/v3/ticker/price"
+    ]
+    for url in endpoints:
+        try:
+            res = requests.get(url, params={"symbol": symbol}, timeout=5)
+            if res.status_code == 200:
+                return float(res.json()['price'])
+        except:
+            continue
+    raise Exception(f"{symbol} fiyatı çekilemedi. Binance IP engeli devam ediyor.")
 
 try:
-    # Fiyat çekme
-    p1 = float(client.ticker_price("BTCUSDT")['price'])
-    p2 = float(client.ticker_price("ETHBTC")['price'])
-    p3 = float(client.ticker_price("ETHUSDT")['price'])
+    # Fiyat çekme işlemleri
+    p1 = get_price("BTCUSDT")
+    p2 = get_price("ETHBTC")
+    p3 = get_price("ETHUSDT")
 
     # Üçgen arbitraj hesabı
     final_usdt = (1 / p1) * (1 / p2) * p3
