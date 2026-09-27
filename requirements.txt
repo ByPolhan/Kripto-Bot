@@ -1,3 +1,5 @@
 streamlit
-binance-connector
 requests
+pandas
+plotly
+ta
